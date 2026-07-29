@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌙 Dark Translator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Vazirmatn:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg: #0f0f1a;
+            --bg-elevated: #161622;
+            --card: #1c1c2e;
+            --card-hover: #24243e;
+            --border: #2d2d44;
+            --accent: #a855f7;
+            --accent-glow: #c084fc;
+            --text: #f1f5f9;
+            --text-dim: #71718a;
+            --success: #22c55e;
+            --error: #ef4444;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            :root { /* same */ }
+        }
+        
+        body {
+            font-family: 'Vazirmatn', 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 20% 0%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 100%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                var(--bg);
+            z-index: -1;
+            animation: bgShift 20s ease-in-out infinite;
+        }
+        
+        @keyframes bgShift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-2%, 2%) scale(1.02); }
+        }
+        
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px; height: 4px;
+            border-radius: 50%;
+            background: var(--accent);
+            opacity: 0.3;
+            animation: float 15s infinite linear;
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 0.3; }
+            90% { opacity: 0.3; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+        
+        /* Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            margin-bottom: 24px;
+            background: rgba(28, 28, 46, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 2px;
+            background: linear-gradient(90deg, var(--accent), #6366f1, var(--accent));
+            animation: shine 3s linear infinite;
+        }
+        
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), #6366f1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .logo-icon {
+            font-size: 2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        /* Main content */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 24px;
+            align-items: start;
+        }
+        
+        /* Translator card */
+        .translator-card {
+            background: rgba(28, 28, 46, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            box-shadow: 
+                0 4px 24px rgba(0,0,0,0.3),
+                0 0 0 1px rgba(168, 85, 247, 0.1) inset;
+        }
+        
+        .lang-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        
+        .lang-select-wrapper {
+            flex: 1;
+            position: relative;
+        }
+        
+        .lang-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+        
+        .lang-select {
+            width: 100%;
+            padding: 14px 48px 14px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--text);
+            font-size: 1rem;
+            font-family: inherit;
+            cursor: pointer;
+            appearance: none;
+            transition: all 0.2s ease;
+        }
+        
+        .lang-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.2);
+        }
+        
+        .lang-select:hover {
+            border-color: var(--accent-glow);
+        }
+        
+        .swap-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--card), var(--card-hover));
+            border: 1px solid var(--border);
+            color: var(--accent);
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            flex-shrink: 0;
+        }
+        
+        .swap-btn:hover {
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
+            transform: rotate(180deg) scale(1.1);
+            box-shadow: 0 8px 32px rgba(168, 85, 247, 0.4);
+        }
+        
+        .swap-btn:active {
+            transform: rotate(180deg) scale(0.95);
+        }
+        
+        /* Text areas */
+        .textarea-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .textarea-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .textarea-label i {
+            color: var(--accent);
+        }
+        
+        .textarea-wrapper {
+            position: relative;
+            flex: 1;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 20px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            line-height: 1.7;
+            resize: vertical;
+            min-height: 200px;
+            max-height: 500px;
+            transition: all 0.2s ease;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 
+                0 0 0 3px rgba(168, 85, 247, 0.15),
+                0 8px 32px rgba(0,0,0,0.3);
+        }
+        
+        textarea::placeholder {
+            color: var(--text-dim);
+            opacity: 0.6;
+        }
+        
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        textarea::-webkit-scrollbar-track {
+            background: var(--bg);
+            border-radius: 4px;
+        }
+        
+        textarea::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+        
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: var(--text-dim);
+        }
+        
+        /* Translate button */
+        .translate-btn {
+            width: 100%;
+            padding: 18px 32px;
+            background: linear-gradient(135deg, var(--accent), #6366f1);
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .translate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%; right: -100%; bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+        
+        .translate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 12px 40px rgba(168, 85, 247, 0.4),
+                0 0 0 1px rgba(255,255,255,0.1) inset;
+        }
+        
+        .translate-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+        
+        .translate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .translate-btn .spinner {
+            display: none;
+            width: 20px; height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        .translate-btn.loading .btn-text {
+            display: none;
+        }
+        
+        .translate-btn.loading .spinner {
+            display: block;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            flex: 1;
+            min-width: 140px;
+            padding: 14px 24px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .action-btn:hover {
+            background: var(--card-hover);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(168, 85, 247, 0.15);
+        }
+        
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .action-btn i {
+            font-size: 1.1rem;
+        }
+        
+        /* History panel */
+        .history-panel {
+            background: rgba(28, 28, 46, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            height: fit-content;
+            max-height: calc(100vh - 160px);
+            position: sticky;
+            top: 100px;
+            box-shadow: 
+                0 4px 24px rgba(0,0,0,0.3),
+                0 0 0 1px rgba(168, 85, 247, 0.1) inset;
+        }
+        
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        
+        .panel-title i {
+            color: var(--accent);
+            font-size: 1.3rem;
+        }
+        
+        .clear-history-btn {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .clear-history-btn:hover {
+            background: var(--error);
+            border-color: var(--error);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        /* History list */
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 400px;
+            padding-right: 4px;
+        }
+        
+        .history-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .history-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .history-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+        
+        .history-list::-webkit-scrollbar-thumb:hover {
+            background: var(--text-dim);
+        }
+        
+        .history-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .history-item:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.1);
+            transform: translateX(-4px);
+        }
+        
+        .history-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .history-langs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        .history-langs i {
+            color: var(--text-dim);
+        }
+        
+        .history-time {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+        }
+        
+        .history-texts {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .history-src, .history-tgt {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+        
+        .history-src {
+            color: var(--text-dim);
+        }
+        
+        .history-tgt {
+            color: var(--text);
+            font-weight: 500;
+        }
+        
+        .history-badge {
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 100px;
+            font-weight: 700;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        .badge-src {
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--accent);
+        }
+        
+        .badge-tgt {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+        
+        .history-content {
+            flex: 1;
+            min-width: 0;
+            word-break: break-word;
+        }
+        
+        .history-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .history-action {
+            padding: 8px 16px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        
+        .history-action:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+        
+        .history-action.delete:hover {
+            background: var(--error);
+            border-color: var(--error);
+        }
+        
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-dim);
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            color: var(--border);
+            margin-bottom: 16px;
+            display: block;
+        }
+        
+        .empty-state p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: linear-gradient(135deg, var(--accent), #6366f1);
+            color: white;
+            padding: 14px 28px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 
+                0 12px 40px rgba(168, 85, 247, 0.4),
+                0 0 0 1px rgba(255,255,255,0.1);
+            z-index: 1000;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .toast i {
+            font-size: 1.1rem;
+        }
+        
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 15, 26, 0.9);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .loading-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .loader {
+            width: 60px; height: 60px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+            
+            .history-panel {
+                position: static;
+                max-height: none;
+                order: -1;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .translator-card, .history-panel {
+                padding: 20px;
+                border-radius: 20px;
+            }
+            
+            .lang-row {
+                flex-direction: column;
+            }
+            
+            .swap-btn {
+                width: 48px; height: 48px;
+                transform: rotate(90deg);
+            }
+            
+            .swap-btn:hover {
+                transform: rotate(270deg) scale(1.1);
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .action-btn {
+                width: 100%;
+            }
+        }
+        
+        /* RTL adjustments */
+        [dir="rtl"] .lang-select {
+            padding-left: 48px;
+            padding-right: 16px;
+        }
+        
+        /* Reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <header>
+            <div class="logo">
+                <span class="logo-icon">🌙</span>
+                <span>Translator</span>
+            </div>
+            <div class="header-actions">
+                <button class="action-btn" id="themeToggle" title="Theme">
+                    <i>🌙</i>
+                </button>
+            </div>
+        </header>
+        
+        <main>
+            <!-- Translator Panel -->
+            <div class="translator-card">
+                <!-- Language Selectors -->
+                <div class="lang-row">
+                    <div class="lang-select-wrapper">
+                        <label class="lang-label">مبدأ</label>
+                        <select class="lang-select" id="sourceLang">
+                            {{SOURCE_OPTIONS}}
+                        </select>
+                    </div>
+                    
+                    <button class="swap-btn" id="swapBtn" title="جابه‌جا کردن">
+                        ⇄
+                    </button>
+                    
+                    <div class="lang-select-wrapper">
+                        <label class="lang-label">مقصد</label>
+                        <select class="lang-select" id="targetLang">
+                            {{TARGET_OPTIONS}}
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Source Text -->
+                <div class="textarea-group">
+                    <div class="textarea-label">
+                        <i>✍️</i>
+                        <span>متن مبدأ</span>
+                        <span id="charCount" style="margin-right: auto; font-size: 0.7rem; color: var(--border);">0 کاراکتر</span>
+                    </div>
+                    <div class="textarea-wrapper">
+                        <textarea 
+                            id="sourceText" 
+                            placeholder="اینجا تایپ کن یا پیست کن... (Ctrl+Enter برای ترجمه)"
+                            spellcheck="false"
+                        ></textarea>
+                    </div>
+                </div>
+                
+                <!-- Translate Button -->
+                <button class="translate-btn" id="translateBtn">
+                    <span class="btn-text">
+                        <i>🚀</i>
+                        ترجمه کن
+                    </span>
+                    <div class="spinner"></div>
+                </button>
+                
+                <!-- Target Text -->
+                <div class="textarea-group">
+                    <div class="textarea-label">
+                        <i>✨</i>
+                        <span>ترجمه</span>
+                    </div>
+                    <div class="textarea-wrapper">
+                        <textarea 
+                            id="targetText" 
+                            placeholder="ترجمه اینجا نشون داده میشه..."
+                            readonly
+                        ></textarea>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="action-buttons">
+                    <button class="action-btn" id="copyBtn">
+                        <i>📋</i> کپی ترجمه
+                    </button>
+                    <button class="action-btn" id="clearBtn">
+                        <i>🗑️</i> پاک کردن
+                    </button>
+                </div>
+            </div>
+            
+            <!-- History Panel -->
+            <div class="history-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i>📜</i>
+                        <span>تاریخچه</span>
+                    </div>
+                    <button class="clear-history-btn" id="clearHistory" title="پاک کردن تاریخچه">
+                        🗑️
+                    </button>
+                </div>
+                
+                <div class="history-list" id="historyList">
+                    <div class="empty-state" id="emptyState">
+                        <i>🌙</i>
+                        <p>هنوز تاریخچه‌ای نداری<br>ترجمه کن تا اینجا پر بشه!</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <i>✅</i>
+        <span id="toastText">کپی شد!</span>
+    </div>
+    
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader"></div>
+    </div>
+    
+    <script>
+        // ============ State ============
+        let history = [];
+        let isTranslating = false;
+        
+        // ============ DOM Elements ============
+        const sourceText = document.getElementById('sourceText');
+        const targetText = document.getElementById('targetText');
+        const sourceLang = document.getElementById('sourceLang');
+        const targetLang = document.getElementById('targetLang');
+        const translateBtn = document.getElementById('translateBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const swapBtn = document.getElementById('swapBtn');
+        const charCount = document.getElementById('charCount');
+        const historyList = document.getElementById('historyList');
+        const emptyState = document.getElementById('emptyState');
+        const clearHistoryBtn = document.getElementById('clearHistory');
+        const toast = document.getElementById('toast');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const themeToggle = document.getElementById('themeToggle');
+        
+        // ============ Particles ============
+        function createParticles() {
+            const container = document.getElementById('particles');
+            const count = 20;
+            
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDelay = Math.random() * 15 + 's';
+                p.style.animationDuration = (15 + Math.random() * 10) + 's';
+                p.style.opacity = 0.1 + Math.random() * 0.3;
+                container.appendChild(p);
+            }
+        }
+        
+        // ============ Character Counter ============
+        sourceText.addEventListener('input', () => {
+            const len = sourceText.value.length;
+            charCount.textContent = `${len.toLocaleString()} کاراکتر`;
+            charCount.style.color = len > 5000 ? '#ef4444' : len > 3000 ? '#f59e0b' : 'var(--border)';
+        });
+        
+        // ============ Toast ============
+        function showToast(message, type = 'success') {
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            toast.innerHTML = `<i>${icons[type] || icons.success}</i><span id="toastText">${message}</span>`;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        
+        // ============ Loading ============
+        function setLoading(loading) {
+            isTranslating = loading;
+            translateBtn.classList.toggle('loading', loading);
+            loadingOverlay.classList.toggle('show', loading);
+        }
+        
+        // ============ Translation ============
+        async function translate() {
+            const text = sourceText.value.trim();
+            if (!text) {
+                showToast('یه متن بنویس اول! 😅', 'info');
+                sourceText.focus();
+                return;
+            }
+            
+            setLoading(true);
+            
+            try {
+                const response = await fetch('/translate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({
+                        text: text,
+                        source: sourceLang.value,
+                        target: targetLang.value
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                
+                targetText.value = data.translated;
+                showToast(`ترجمه شد با ${data.backend}! ✨`);
+                refreshHistory();
+                
+            } catch (err) {
+                console.error(err);
+                targetText.value = `❌ خطا: ${err.message}`;
+                showToast('ترجمه نشد! اینترنت رو چک کن 🌐', 'error');
+            } finally {
+                setLoading(false);
+            }
+        }
+        
+        translateBtn.addEventListener('click', translate);
+        
+        // Ctrl+Enter to translate
+        sourceText.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                translate();
+            }
+        });
+        
+        // ============ Copy ============
+        copyBtn.addEventListener('click', async () => {
+            const text = targetText.value.trim();
+            if (!text) {
+                showToast('یه traducción کپی کن! 😅', 'info');
+                return;
+            }
+            
+            try {
+                await navigator.clipboard.writeText(text);
+                copyBtn.innerHTML = '<i>✅</i> کپی شد!';
+                showToast('کپی شد! ✅');
+                setTimeout(() => copyBtn.innerHTML = '<i>📋</i> کپی ترجمه', 2000);
+            } catch {
+                showToast('کپی نشد! دستی کپی کن 😅', 'error');
+            }
+        });
+        
+        // ============ Clear ============
+        clearBtn.addEventListener('click', () => {
+            sourceText.value = '';
+            targetText.value = '';
+            charCount.textContent = '0 کاراکتر';
+            charCount.style.color = 'var(--border)';
+            sourceText.focus();
+            showToast('پاک شد! 🗑️');
+        });
+        
+        // ============ Swap Languages ============
+        swapBtn.addEventListener('click', async () => {
+            if (sourceLang.value === 'auto') {
+                showToast('نمیشه با auto جابه‌جا کرد! 😅', 'info');
+                return;
+            }
+            
+            // Swap selects
+            const temp = sourceLang.value;
+            sourceLang.value = targetLang.value;
+            targetLang.value = temp;
+            
+            // Swap text if both have content
+            const src = sourceText.value.trim();
+            const tgt = targetText.value.trim();
+            
+            if (src && tgt) {
+                sourceText.value = tgt;
+                targetText.value = src;
+                charCount.textContent = `${tgt.length.toLocaleString()} کاراکتر`;
+            }
+            
+            // Animate
+            swapBtn.style.transform = 'rotate(180deg) scale(1.1)';
+            setTimeout(() => swapBtn.style.transform = '', 300);
+            
+            // Auto translate
+            if (sourceText.value.trim()) {
+                translate();
+            }
+        });
+        
+        // ============ History ============
+        async function refreshHistory() {
+            try {
+                const response = await fetch('/history');
+                history = await response.json();
+                renderHistory();
+            } catch (err) {
+                console.error('History load failed:', err);
+            }
+        }
+        
+        function renderHistory() {
+            if (history.length === 0) {
+                emptyState.style.display = 'block';
+                historyList.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            historyList.innerHTML = history.map((item, index) => `
+                <div class="history-item" data-id="${item.id}" style="animation-delay: ${index * 50}ms">
+                    <div class="history-header">
+                        <div class="history-langs">
+                            <span class="badge-src">${item.source_lang === 'auto' ? '🔍' : item.source_lang}</span>
+                            <i>→</i>
+                            <span class="badge-tgt">${item.target_lang}</span>
+                        </div>
+                        <span class="history-time">${item.timestamp}</span>
+                    </div>
+                    <div class="history-texts">
+                        <div class="history-src">
+                            <span class="history-badge badge-src">مبدأ</span>
+                            <span class="history-content">${escapeHtml(item.source)}</span>
+                        </div>
+                        <div class="history-tgt">
+                            <span class="history-badge badge-tgt">ترجمه</span>
+                            <span class="history-content">${escapeHtml(item.translated)}</span>
+                        </div>
+                    </div>
+                    <div class="history-actions">
+                        <button class="history-action" onclick="copyHistory('${escapeHtml(item.translated).replace(/'/g, "\\'")}')">
+                            <i>📋</i> کپی
+                        </button>
+                        <button class="history-action delete" onclick="deleteHistory(${item.id})">
+                            <i>🗑️</i> حذف
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        window.copyHistory = async (text) => {
+            try {
+                await navigator.clipboard.writeText(text);
+                showToast('کپی شد! ✅');
+            } catch {
+                showToast('کپی نشد! 😅', 'error');
+            }
+        };
+        
+        window.deleteHistory = async (id) => {
+            try {
+                await fetch(`/history/${id}`, { method: 'DELETE' });
+                refreshHistory();
+                showToast('حذف شد! 🗑️');
+            } catch {
+                showToast('حذف نشد! 😅', 'error');
+            }
+        };
+        
+        clearHistoryBtn.addEventListener('click', async () => {
+            if (!confirm('مطمئنی میخوای کل تاریخچه پاک بشه؟ 😳')) return;
+            
+            try {
+                await fetch('/history', { method: 'DELETE' });
+                history = [];
+                renderHistory();
+                showToast('تاریخچه پاک شد! 🗑️');
+            } catch {
+                showToast('پاک نشد! 😅', 'error');
+            }
+        });
+        
+        // ============ Keyboard Shortcuts ============
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+Shift+C = Copy
+            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+                copyBtn.click();
+            }
+            // Ctrl+Shift+X = Clear
+            if (e.ctrlKey && e.shiftKey && e.key === 'X') {
+                clearBtn.click();
+            }
+            // Ctrl+Shift+S = Swap
+            if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+                swapBtn.click();
+            }
+            // Escape = Clear focus
+            if (e.key === 'Escape') {
+                sourceText.blur();
+                targetText.blur();
+            }
+        });
+        
+        // ============ Theme Toggle ============
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.body.style.filter !== 'invert(1)';
+            document.body.style.filter = isDark ? 'invert(1) hue-rotate(180deg)' : '';
+            themeToggle.innerHTML = isDark ? '☀️' : '🌙';
+            showToast(isDark ? 'حالت روشن! ☀️' : 'حالت تیره! 🌙');
+        });
+        
+        // ============ Auto-resize textarea ============
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 500) + 'px';
+        }
+        
+        [sourceText, targetText].forEach(t => {
+            t.addEventListener('input', () => autoResize(t));
+        });
+        
+        // ============ Init ============
+        createParticles();
+        refreshHistory();
+        
+        // Focus source on load
+        setTimeout(() => sourceText.focus(), 300);
+        
+        // Console easter egg
+        console.log(`
+%c🌙 Dark Translator%c
+Built with ❤️ for Abolfazl
+v1.0.0 | Dark mode forever
+        `, 'font-size: 20px; color: #a855f7; font-weight: bold;', 'font-size: 12px; color: #71718a;');
+    </script>
+</body>
+</html>
